@@ -1,0 +1,1 @@
+{"version":3,"file":"ConnectionTokens.js","sourceRoot":"","sources":["../../../src/resources/Terminal/ConnectionTokens.ts"],"names":[],"mappings":"AAAA,uCAAuC;AAEvC,OAAO,EAAC,cAAc,EAAC,MAAM,yBAAyB,CAAC;AAGvD,MAAM,OAAO,uBAAwB,SAAQ,cAAc;IACzD;;OAEG;IACH,MAAM,CACJ,MAA6C,EAC7C,OAAwB;QAExB,OAAO,IAAI,CAAC,YAAY,CACtB,MAAM,EACN,gCAAgC,EAChC,MAAM,EACN,OAAO,CACD,CAAC;IACX,CAAC;CACF"}
