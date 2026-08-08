@@ -1,3 +1,48 @@
+export const updateBookingStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['pending', 'pending_payment', 'confirmed', 'cancelled', 'payment_failed'];
+
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ message: 'Invalid booking status' });
+    }
+
+    const booking = await Booking.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { status },
+      { new: true }
+    ).populate('serviceId', 'name duration price');
+
+    if (!booking) {
+      return res.status(404).json({ message: 'Booking not found' });
+    }
+
+    const business = await User.findById(req.user.id);
+    if (business && status === 'cancelled') {
+      try {
+        await cancelBookingCalendarEvent({ business, booking });
+      } catch (calendarError) {
+        console.error('Google Calendar cancellation failed:', calendarError.message);
+      }
+    }
+
+    let emailResult = null;
+    if (business && booking.serviceId) {
+      emailResult = { sent: 'processing' };
+      sendBookingNotification({
+        business,
+        service: booking.serviceId,
+        booking,
+        type: status === 'cancelled' ? 'cancelled' : 'status',
+      }).catch(emailError => console.error('Booking status email failed:', emailError.message));
+    }
+
+    res.json({ message: 'Booking updated', booking, email: emailResult });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 export const rescheduleBooking = async (req, res) => {
   try {
     const { date, startTime, endTime } = req.body;
