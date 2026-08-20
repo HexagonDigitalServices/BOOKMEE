@@ -1,4 +1,108 @@
 
+  useEffect(() => {
+    const loadUser = async () => {
+      if (!localStorage.getItem("token")) {
+        setMessage("Please log in before editing your profile");
+        return;
+      }
+
+      try {
+        const { data } = await getMe();
+        const nextUser = data?.user;
+
+        if (!nextUser) {
+          setMessage("Could not load profile details");
+          return;
+        }
+
+        setUser(nextUser);
+        setForm({
+          businessName: nextUser.businessName || "Mental Clinic",
+          businessDescription: nextUser.businessDescription || "",
+          timezone: nextUser.timezone || "Asia/Kolkata",
+          brandTheme: nextUser.brandTheme || "emerald",
+          brandAccent: nextUser.brandAccent || "#6C47FF",
+        });
+      } catch (error) {
+        setMessage(
+          error.response?.data?.message || "Could not load profile details",
+        );
+      }
+    };
+
+    loadUser();
+  }, []);
+
+  const handleChange = (event) => {
+    setForm((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value,
+    }));
+  };
+
+  const chooseTheme = (theme) => {
+    setForm((prev) => ({
+      ...prev,
+      brandTheme: theme.id,
+      brandAccent: theme.accent,
+    }));
+  };
+
+  const copyPublicLink = async () => {
+    if (!publicLink) return;
+    await navigator.clipboard.writeText(publicLink);
+    setCopyMessage("Copied!");
+    window.setTimeout(() => setCopyMessage(""), 1800);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!localStorage.getItem("token")) {
+      setMessage("Please log in before editing your profile");
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const { data } = await updateProfile(form);
+      setUser(data.user);
+      setMessage("Profile updated successfully");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const connectGoogleCalendar = async () => {
+    setConnectingCalendar(true);
+    setMessage("");
+
+    try {
+      const { data } = await getGoogleConnectUrl();
+      window.location.href = data.url;
+    } catch (error) {
+      setMessage(
+        error.response?.data?.message ||
+          "Could not start Google Calendar connection",
+      );
+      setConnectingCalendar(false);
+    }
+  };
+
+  const getMessageBannerClass = (msg) => {
+    if (!msg) return "";
+    return msg.toLowerCase().includes("success") || msg.includes("updated")
+      ? s.messageBannerSuccess
+      : s.messageBannerError;
+  };
+
+  return (
+    <AppLayout>
+      <div className={s.pageLayout}>
         {/* LEFT COLUMN */}
         <div className={s.leftColumn}>
           {/* Header & Illustration */}
@@ -388,4 +492,6 @@
             </div>
           </div>
         </div>
-  
+      </div>
+    </AppLayout>
+  );
