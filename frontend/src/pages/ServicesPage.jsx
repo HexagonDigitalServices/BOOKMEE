@@ -1,3 +1,154 @@
+          {/* LEFT: Form */}
+        <section>
+          <div className={s.headerRow}>
+            <div>
+              <p className={s.pageLabel}>Services</p>
+              <h1 className={s.mainHeading}>
+                Shape what customers can{" "}
+                <span className={s.gradientText}>book.</span>
+              </h1>
+              <p className={s.subText}>
+                Add each appointment type with a duration and price. Active
+                services appear on your public booking page.
+              </p>
+            </div>
+            <div className={s.illustrationContainer}>
+              <img
+                src={p6Image}
+                alt="Illustration"
+                className={s.illustrationImg}
+              />
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className={s.formCard}>
+            <h3 className={s.formTitle}>
+              <Plus className={s.formTitleIcon} />
+              {editingId ? "Edit service" : "Add new service"}
+            </h3>
+            <div className={s.formGrid}>
+              <label className={s.inputLabel}>
+                Service name
+                <div className={s.inputWrapper}>
+                  <Layers className={s.inputIcon} />
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    className={s.textInput}
+                    placeholder="Consultation"
+                  />
+                </div>
+              </label>
+
+              <div className={s.durationPriceGrid}>
+                <label className={s.inputLabel}>
+                  Duration
+                  <div className={s.inputWrapper}>
+                    <Clock className={s.inputIcon} />
+                    <select
+                      name="duration"
+                      value={form.duration}
+                      onChange={handleChange}
+                      className={s.selectInput}
+                    >
+                      {[15, 30, 45, 60, 90, 120].map((value) => (
+                        <option key={value} value={value}>
+                          {value} minutes
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </label>
+
+                <label className={s.inputLabel}>
+                  Price
+                  <div className={s.inputWrapper}>
+                    <IndianRupee className={s.inputIcon} />
+                    <input
+                      name="price"
+                      type="number"
+                      min="0"
+                      value={form.price}
+                      onChange={handleChange}
+                      className={s.priceInput}
+                    />
+                  </div>
+                </label>
+              </div>
+
+              <label className={s.inputLabel}>
+                Description
+                <div className={s.textareaWrapper}>
+                  <FileText className={s.textareaIcon} />
+                  <textarea
+                    name="description"
+                    rows={3}
+                    value={form.description}
+                    onChange={handleChange}
+                    className={s.textareaInput}
+                    placeholder="A short customer-facing description"
+                  />
+                </div>
+              </label>
+
+              <label className={s.inputLabel}>
+                Service Icon
+                <div className={s.iconGrid}>
+                  {Object.keys(ICON_MAP).map((iconName) => (
+                    <button
+                      key={iconName}
+                      type="button"
+                      onClick={() =>
+                        setForm((prev) => ({ ...prev, icon: iconName }))
+                      }
+                      className={
+                        form.icon === iconName
+                          ? s.iconBtnActive
+                          : s.iconBtnInactive
+                      }
+                    >
+                      <img
+                        src={ICON_MAP[iconName]}
+                        alt="Service Icon"
+                        className={s.iconImg}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </label>
+            </div>
+
+            <div className={s.formActions}>
+              <button
+                type="submit"
+                disabled={loading}
+                className={s.submitButton}
+              >
+                <Save className={s.submitIcon} />
+                {loading
+                  ? "Saving..."
+                  : editingId
+                    ? "Save changes"
+                    : "Add service"}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={cancelEditing}
+                  className={s.cancelButton}
+                >
+                  <X className={s.cancelIcon} />
+                  Cancel
+                </button>
+              )}
+            </div>
+
+            {message && <p className={s.message}>{message}</p>}
+          </form>
+        </section>
+
+
 
 
         {/* RIGHT: Service list */}
