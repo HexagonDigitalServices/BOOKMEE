@@ -1,5 +1,30 @@
 
 
+        {/* LEFT */}
+        <div className={s.leftColumn}>
+          <div className={s.leftTopArea}>
+            <div>
+              <p className={s.pageLabel}>Payments</p>
+              <h1 className={s.mainHeading}>
+                Track <span className={s.gradientEarnings}>earnings</span>
+                <br />
+                and request withdrawals.
+              </h1>
+              <p className={s.subText}>
+                Customer payments land with the platform first. A 10% platform
+                fee is deducted, then the remaining balance becomes available
+                here.
+              </p>
+            </div>
+            <div className={s.illustrationContainer}>
+              <img
+                src={p3Image}
+                alt="Illustration"
+                className={s.illustrationImg}
+              />
+            </div>
+          </div>
+
           {/* Wallet cards */}
           <div className={s.walletCardsGrid}>
             <div className={s.walletCard}>
