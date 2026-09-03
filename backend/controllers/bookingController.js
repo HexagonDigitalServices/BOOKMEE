@@ -1,3 +1,72 @@
+import Booking from '../models/Booking.js';
+import Service from '../models/Service.js';
+import User from '../models/User.js';
+import { buildCustomerCalendarUrl } from '../utils/calendarLink.js';
+import { cancelBookingCalendarEvent, updateBookingCalendarEvent } from '../utils/googleCalendar.js';
+import { sendBookingNotification } from '../utils/bookingNotifications.js';
+import { timesOverlap } from '../utils/overlap.js';
+
+/**
+ * Retrieves a list of bookings for the authenticated user based on query parameters.
+ * Filters can include booking status and date.
+ * Populates service details and appends a customer Google Calendar URL if available.
+ * 
+ * @param {Object} req - Express request object containing user ID and query parameters.
+ * @param {Object} res - Express response object.
+ */
+export const listBookings = async (req, res) => {
+  try {
+    const query = { userId: req.user.id };
+
+    if (req.query.status) {
+      if (req.query.status === 'rescheduled') {
+        query.isRescheduled = true;
+      } else {
+        query.status = req.query.status;
+      }
+    }
+    if (!req.query.status || req.query.status === 'rescheduled') {
+      query.status = { $nin: ['pending_payment', 'payment_failed'] };
+    }
+    if (req.query.date) query.date = req.query.date;
+
+    const [bookings, business] = await Promise.all([
+      Booking.find(query)
+        .populate('serviceId', 'name duration price')
+        .sort({ createdAt: -1 })
+        .lean(),
+      User.findById(req.user.id).select('name businessName').lean(),
+    ]);
+
+    const bookingsWithCalendarUrls = bookings.map((booking) => {
+      if (booking.customerCalendarUrl || !business || !booking.serviceId) {
+        return booking;
+      }
+
+      return {
+        ...booking,
+        customerCalendarUrl: buildCustomerCalendarUrl({
+          business,
+          service: booking.serviceId,
+          booking,
+        }),
+      };
+    });
+
+    res.json({ bookings: bookingsWithCalendarUrls });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+/**
+ * Updates the status of a specific booking (e.g., confirmed, cancelled).
+ * Handles sending email notifications to the customer about the status change.
+ * If the booking is cancelled, it also removes the event from Google Calendar.
+ * 
+ * @param {Object} req - Express request object containing booking ID in params and new status in body.
+ * @param {Object} res - Express response object.
+ */
 export const updateBookingStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -43,6 +112,14 @@ export const updateBookingStatus = async (req, res) => {
   }
 };
 
+/**
+ * Reschedules an existing booking to a new date and time slot.
+ * Validates for conflicting bookings to prevent double-booking.
+ * Updates the existing Google Calendar event and sends a reschedule notification email.
+ * 
+ * @param {Object} req - Express request object containing booking ID in params and new date/time in body.
+ * @param {Object} res - Express response object.
+ */
 export const rescheduleBooking = async (req, res) => {
   try {
     const { date, startTime, endTime } = req.body;
